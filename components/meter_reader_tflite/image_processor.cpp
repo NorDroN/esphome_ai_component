@@ -364,7 +364,7 @@ bool ImageProcessor::process_jpeg_zone_to_buffer(
     
     if (input_type == kTfLiteFloat32) {
         required_size = model_width * model_height * model_channels * sizeof(float);
-    } else if (input_type == kTfLiteUInt8) {
+    } else if (input_type == kTfLiteUInt8 || input_type == kTfLiteInt8) {
         required_size = model_width * model_height * model_channels;
     } else {
         ESP_LOGE(TAG, "Unsupported model input type: %d", input_type);
@@ -699,7 +699,7 @@ bool ImageProcessor::process_raw_zone_to_buffer(
     
     if (input_type == kTfLiteFloat32) {
         required_size = model_width * model_height * model_channels * sizeof(float);
-    } else if (input_type == kTfLiteUInt8) {
+    } else if (input_type == kTfLiteUInt8 || input_type == kTfLiteInt8) {
         required_size = model_width * model_height * model_channels;
     } else {
         ESP_LOGE(TAG, "Unsupported model input type: %d", input_type);
