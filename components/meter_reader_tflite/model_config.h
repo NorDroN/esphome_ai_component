@@ -74,6 +74,19 @@ static const std::unordered_map<std::string, ModelConfig> MODEL_CONFIGS = {
             .invert = true
         }
     },
+    {"person", 
+        ModelConfig{
+            .description = "Person Detection",
+            .tensor_arena_size = "900KB",
+            .output_processing = "direct_class",
+            .scale_factor = 1.0f,
+            .input_type = "int8",
+            .input_channels = 1,
+            .input_order = "RGB",
+            .input_size = {192, 192},
+            .normalize = false
+        }
+    },
     // {"digit_recognizer_v4_10cls_GRAY", 
         // ModelConfig{
             // .description = "digit_recognizer_v4_10cls_GRAY",
