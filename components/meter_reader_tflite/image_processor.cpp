@@ -508,7 +508,7 @@ bool ImageProcessor::process_jpeg_zone_to_buffer(
         scale_success = scale_rgb888_to_float32(cropped_buf, crop_width, crop_height,
                                               output_buffer, model_width, model_height,
                                               model_channels, model_handler_->get_config().normalize);
-    } else if (input_type == kTfLiteUInt8) {
+    } else if (input_type == kTfLiteUInt8 || input_type == kTfLiteInt8) {
         scale_success = scale_rgb888_to_uint8(cropped_buf, crop_width, crop_height,
                                             output_buffer, model_width, model_height,
                                             model_channels);
