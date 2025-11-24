@@ -78,7 +78,7 @@ static const std::unordered_map<std::string, ModelConfig> MODEL_CONFIGS = {
         ModelConfig{
             .description = "Person detection",
             .tensor_arena_size = "900KB",
-            .output_processing = "direct_class",
+            .output_processing = "bbox",
             .scale_factor = 1.0f,
             .input_type = "int8",
             .input_channels = 1,

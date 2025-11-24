@@ -384,7 +384,17 @@ ProcessedOutput ModelHandler::process_output(const float *output_data) const {
   /* -----------------------------------------------------------------------
    *  Process according to the selected output_processing mode
    * ----------------------------------------------------------------------- */
-  if (config_.output_processing == "direct_class") {
+  if (config_.output_processing == "bbox") {
+    /* ---------------------------------------------------------------
+     *  Direct class – the tensor already contains the class index.
+     * --------------------------------------------------------------- */
+    result.value = static_cast<float>(max_idx);
+    result.confidence = max_val_output;
+    ESP_LOGD(TAG,
+             "BBox class - Value: %.1f, Confidence: %.6f",
+             result.value, result.confidence);
+
+  } else if (config_.output_processing == "direct_class") {
     /* ---------------------------------------------------------------
      *  Direct class – the tensor already contains the class index.
      * --------------------------------------------------------------- */
