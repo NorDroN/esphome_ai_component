@@ -390,13 +390,21 @@ ProcessedOutput ModelHandler::process_output(const float *output_data) const {
      * --------------------------------------------------------------- */
     ESP_LOGD(TAG, "Raw model outputs before any processing:");
     for (int i = 0; i < num_classes; i+=6) {
-      float score = output_data[i+4];
-      if (score > 0)
+      if (output_data[i+4] > 0) {
         ESP_LOGD(TAG, "  Class %d: [x: %.6f, y: %.6f, w: %.6f, h: %.6f, score: %.6f, class: %.6f]", i, output_data[i], output_data[i+1], output_data[i+2], output_data[i+3], output_data[i+4], output_data[i+5]);
+      }
     }
     
-    result.value = static_cast<float>(max_idx);
-    result.confidence = max_val_output;
+    float value = 0;
+    for (int i = 0; i < num_classes; i+=6) {
+      if (output_data[i+4] > 0) {
+        value = 1;
+        break;
+      }
+    }
+    
+    result.value = value;
+    result.confidence = value;
     ESP_LOGD(TAG,
              "BBox class - Value: %.1f, Confidence: %.6f",
              result.value, result.confidence);
