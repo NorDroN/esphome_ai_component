@@ -386,8 +386,13 @@ ProcessedOutput ModelHandler::process_output(const float *output_data) const {
    * ----------------------------------------------------------------------- */
   if (config_.output_processing == "bbox") {
     /* ---------------------------------------------------------------
-     *  Direct class – the tensor already contains the class index.
+     *  Bbox class – The output is a 2268x6 tensor, where 2268 is the number of candidate boxes and 6 is [x, y, w, h, score, [class]].
      * --------------------------------------------------------------- */
+    ESP_LOGD(TAG, "Raw model outputs before any processing:");
+    for (int i = 0; i < num_classes; i++) {
+      ESP_LOGD(TAG, "  Class %d: %.6f", i, output_data[i]);
+    }
+    
     result.value = static_cast<float>(max_idx);
     result.confidence = max_val_output;
     ESP_LOGD(TAG,
