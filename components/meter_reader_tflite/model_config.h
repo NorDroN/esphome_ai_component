@@ -83,7 +83,8 @@ static const std::unordered_map<std::string, ModelConfig> MODEL_CONFIGS = {
             .input_type = "int8",
             .input_channels = 1,
             .input_order = "RGB",
-            .input_size = {192, 192}
+            .input_size = {192, 192},
+            .normalize = false
         }
     },
     // {"digit_recognizer_v4_10cls_GRAY", 
