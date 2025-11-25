@@ -384,32 +384,7 @@ ProcessedOutput ModelHandler::process_output(const float *output_data) const {
   /* -----------------------------------------------------------------------
    *  Process according to the selected output_processing mode
    * ----------------------------------------------------------------------- */
-  if (config_.output_processing == "bbox") {
-    /* ---------------------------------------------------------------
-     *  Bbox class – The output is a 2268x6 tensor, where 2268 is the number of candidate boxes and 6 is [x, y, w, h, score, [class]].
-     * --------------------------------------------------------------- */
-    ESP_LOGD(TAG, "Raw model outputs before any processing:");
-    for (int i = 0; i < num_classes; i+=6) {
-      if (output_data[i+4] > 0) {
-        ESP_LOGD(TAG, "  Class %d: [x: %.6f, y: %.6f, w: %.6f, h: %.6f, score: %.6f, class: %.6f]", i, output_data[i], output_data[i+1], output_data[i+2], output_data[i+3], output_data[i+4], output_data[i+5]);
-      }
-    }
-    
-    float value = 0;
-    for (int i = 0; i < num_classes; i+=6) {
-      if (output_data[i+4] > 0) {
-        value = 1;
-        break;
-      }
-    }
-    
-    result.value = value;
-    result.confidence = value;
-    ESP_LOGD(TAG,
-             "BBox class - Value: %.1f, Confidence: %.6f",
-             result.value, result.confidence);
-
-  } else if (config_.output_processing == "direct_class") {
+  if (config_.output_processing == "direct_class") {
     /* ---------------------------------------------------------------
      *  Direct class – the tensor already contains the class index.
      * --------------------------------------------------------------- */
@@ -1083,65 +1058,98 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
         return false;
     }
 
-    // Set output size FIRST 
-    output_size_ = output->dims->data[1];
-
 #ifdef DEBUG_METER_READER_TFLITE
     debug_output_tensor_details(output); // Debug output tensor details
 #endif
 
-    // Handle quantized outputs
-    if (output->type == kTfLiteUInt8 || output->type == kTfLiteInt8) {
-        // Dequantize the outputs
-        const float scale = output->params.scale;
-        const int zero_point = output->params.zero_point;
+    if (config_.output_processing == "bbox") {
+      // Calculate output size 
+      output_size_ = output->dims->data[1] * output->dims->data[2];
+      int num_params = output->dims->data[2];
+
+      /* ---------------------------------------------------------------
+      *  Bbox class – The output is a 2268x(5+N) tensor, where 2268 is the number of candidate boxes and 5+N is [x, y, w, h, score, [class1,..,classN]].
+      * --------------------------------------------------------------- */
+      ESP_LOGD(TAG, "Raw model outputs before any processing:");
+      for (int i = 0; i < output_size_; i+=num_params) {
+        if (output_data[i+4] > 0) {
+          ESP_LOGD(TAG, "  Class %d: [x: %.6f, y: %.6f, w: %.6f, h: %.6f, score: %.6f, class: %.6f]", i, output_data[i], output_data[i+1], output_data[i+2], output_data[i+3], output_data[i+4], output_data[i+5]);
+        }
+      }
+      
+      float value = 0;
+      for (int i = 0; i < output_size_; i+=num_params) {
+        if (output_data[i+4] > 0) {
+          value = 1;
+          break;
+        }
+      }
+      
+      ProcessedOutput result = {0.0f, 0.0f};
+      result.value = value;
+      result.confidence = value;
+      ESP_LOGD(TAG,
+             "BBox class - Value: %.1f, Confidence: %.6f",
+             result.value, result.confidence);
+
+      processed_output_ = result;
+    } else {
+      // Set output size FIRST 
+      output_size_ = output->dims->data[1];
+
+      // Handle quantized outputs
+      if (output->type == kTfLiteUInt8 || output->type == kTfLiteInt8) {
+          // Dequantize the outputs
+          const float scale = output->params.scale;
+          const int zero_point = output->params.zero_point;
 
 #ifdef DEBUG_METER_READER_TFLITE         
-        ESP_LOGD(TAG, "Quantized output (%s) - scale: %.6f, zero_point: %d",
-                 output->type == kTfLiteUInt8 ? "uint8" : "int8",
-                 scale, zero_point);
+          ESP_LOGD(TAG, "Quantized output (%s) - scale: %.6f, zero_point: %d",
+                  output->type == kTfLiteUInt8 ? "uint8" : "int8",
+                  scale, zero_point);
 #endif        
-        // Prepare dequantized output buffer
-        dequantized_output_.resize(output_size_);
-        
-        if (output->type == kTfLiteUInt8) {
-            for (int i = 0; i < output_size_; i++) {
-                dequantized_output_[i] = (static_cast<float>(output->data.uint8[i]) - zero_point) * scale;
-            }
-        } else { // kTfLiteInt8
-            for (int i = 0; i < output_size_; i++) {
-                dequantized_output_[i] = (static_cast<float>(output->data.int8[i]) - zero_point) * scale;
-            }
-        }
-        model_output_ = dequantized_output_.data();
+          // Prepare dequantized output buffer
+          dequantized_output_.resize(output_size_);
+          
+          if (output->type == kTfLiteUInt8) {
+              for (int i = 0; i < output_size_; i++) {
+                  dequantized_output_[i] = (static_cast<float>(output->data.uint8[i]) - zero_point) * scale;
+              }
+          } else { // kTfLiteInt8
+              for (int i = 0; i < output_size_; i++) {
+                  dequantized_output_[i] = (static_cast<float>(output->data.int8[i]) - zero_point) * scale;
+              }
+          }
+          model_output_ = dequantized_output_.data();
 
 #ifdef DEBUG_METER_READER_TFLITE        
-        ESP_LOGD(TAG, "First 5 dequantized outputs:");
-        if (output->type == kTfLiteUInt8) {
-            for (int i = 0; i < 5 && i < output_size_; i++) {
-                ESP_LOGD(TAG, "  [%d]: %u -> %.6f", i, output->data.uint8[i], dequantized_output_[i]);
-            }
-        } else {
-            for (int i = 0; i < 5 && i < output_size_; i++) {
-                ESP_LOGD(TAG, "  [%d]: %d -> %.6f", i, output->data.int8[i], dequantized_output_[i]);
-            }
-        }
+          ESP_LOGD(TAG, "First 5 dequantized outputs:");
+          if (output->type == kTfLiteUInt8) {
+              for (int i = 0; i < 5 && i < output_size_; i++) {
+                  ESP_LOGD(TAG, "  [%d]: %u -> %.6f", i, output->data.uint8[i], dequantized_output_[i]);
+              }
+          } else {
+              for (int i = 0; i < 5 && i < output_size_; i++) {
+                  ESP_LOGD(TAG, "  [%d]: %d -> %.6f", i, output->data.int8[i], dequantized_output_[i]);
+              }
+          }
 #endif
-    } 
-    else {
-        model_output_ = output->data.f;
-    }
+      } 
+      else {
+          model_output_ = output->data.f;
+      }
 
 #ifdef DEBUG_METER_READER_TFLITE
-    debug_raw_outputs(output); // Debug raw outputs before processing
-    debug_qat_model_output(); // QAT-specific debug output
+      debug_raw_outputs(output); // Debug raw outputs before processing
+      debug_qat_model_output(); // QAT-specific debug output
 #endif
-    
-    // Process the output to get both value and confidence
-    processed_output_ = process_output(model_output_);
-    ESP_LOGD(TAG, "Processed output - Value: %.1f, Confidence: %.6f", 
-             processed_output_.value, processed_output_.confidence);
-    
+      
+      // Process the output to get both value and confidence
+      processed_output_ = process_output(model_output_);
+      ESP_LOGD(TAG, "Processed output - Value: %.1f, Confidence: %.6f", 
+              processed_output_.value, processed_output_.confidence);
+    }
+
     DURATION_END("ModelHandler::invoke_model");
     return true;
 }
