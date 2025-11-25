@@ -1093,6 +1093,8 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
              result.value, result.confidence);
 
       processed_output_ = result;
+      ESP_LOGD(TAG, "Processed output - Value: %.1f, Confidence: %.6f", 
+              processed_output_.value, processed_output_.confidence);
     } else {
       // Set output size FIRST 
       output_size_ = output->dims->data[1];
