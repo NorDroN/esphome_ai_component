@@ -1080,7 +1080,7 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
       float value = 0;
       for (int i = 0; i < output_size_; i+=num_params) {
         if (output_data[i+4] > 0) {
-          value = 1;
+          value = 1; // TODO calculate class
           break;
         }
       }
