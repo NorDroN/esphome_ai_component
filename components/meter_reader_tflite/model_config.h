@@ -87,6 +87,19 @@ static const std::unordered_map<std::string, ModelConfig> MODEL_CONFIGS = {
             .normalize = false
         }
     },
+    {"animal_detection_int8", 
+        ModelConfig{
+            .description = "Animal detection",
+            .tensor_arena_size = "900KB",
+            .output_processing = "bbox",
+            .scale_factor = 1.0f,
+            .input_type = "int8",
+            .input_channels = 3,
+            .input_order = "RGB",
+            .input_size = {192, 192},
+            .normalize = false
+        }
+    },
     // {"digit_recognizer_v4_10cls_GRAY", 
         // ModelConfig{
             // .description = "digit_recognizer_v4_10cls_GRAY",
