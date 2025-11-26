@@ -1067,7 +1067,7 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
       output_size_ = output->dims->data[1] * output->dims->data[2];
       int num_params = output->dims->data[2];
 
-      float* output_data = output->data.f;
+      uint8_t* output_data = output->data.uint8;
 
       ESP_LOGD(TAG, "Total size: %d, Num parameters: %d", output_size_, num_params);
 
