@@ -1067,6 +1067,8 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
       output_size_ = output->dims->data[1] * output->dims->data[2];
       int num_params = output->dims->data[2];
 
+      ESP_LOGD(TAG, "Total size: %d, Num parameters: %d", output_size_, num_params);
+
       /* ---------------------------------------------------------------
       *  Bbox class – The output is a 2268x(5+N) tensor, where 2268 is the number of candidate boxes and 5+N is [x, y, w, h, score, [class1,..,classN]].
       * --------------------------------------------------------------- */
