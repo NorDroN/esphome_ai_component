@@ -1102,34 +1102,34 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
 
 #ifdef DEBUG_METER_READER_TFLITE         
         ESP_LOGD(TAG, "Quantized output (%s) - scale: %.6f, zero_point: %d",
-                output->type == kTfLiteUInt8 ? "uint8" : "int8",
-                scale, zero_point);
+                 output->type == kTfLiteUInt8 ? "uint8" : "int8",
+                 scale, zero_point);
 #endif        
-      // Prepare dequantized output buffer
-      dequantized_output_.resize(output_size_);
-      
-      if (output->type == kTfLiteUInt8) {
-          for (int i = 0; i < output_size_; i++) {
-              dequantized_output_[i] = (static_cast<float>(output->data.uint8[i]) - zero_point) * scale;
-          }
-      } else { // kTfLiteInt8
-          for (int i = 0; i < output_size_; i++) {
-              dequantized_output_[i] = (static_cast<float>(output->data.int8[i]) - zero_point) * scale;
-          }
-      }
-      model_output_ = dequantized_output_.data();
+        // Prepare dequantized output buffer
+        dequantized_output_.resize(output_size_);
+        
+        if (output->type == kTfLiteUInt8) {
+            for (int i = 0; i < output_size_; i++) {
+                dequantized_output_[i] = (static_cast<float>(output->data.uint8[i]) - zero_point) * scale;
+            }
+        } else { // kTfLiteInt8
+            for (int i = 0; i < output_size_; i++) {
+                dequantized_output_[i] = (static_cast<float>(output->data.int8[i]) - zero_point) * scale;
+            }
+        }
+        model_output_ = dequantized_output_.data();
 
 #ifdef DEBUG_METER_READER_TFLITE        
-      ESP_LOGD(TAG, "First 5 dequantized outputs:");
-      if (output->type == kTfLiteUInt8) {
-          for (int i = 0; i < 5 && i < output_size_; i++) {
-              ESP_LOGD(TAG, "  [%d]: %u -> %.6f", i, output->data.uint8[i], dequantized_output_[i]);
-          }
-      } else {
-          for (int i = 0; i < 5 && i < output_size_; i++) {
-              ESP_LOGD(TAG, "  [%d]: %d -> %.6f", i, output->data.int8[i], dequantized_output_[i]);
-          }
-      }
+        ESP_LOGD(TAG, "First 5 dequantized outputs:");
+        if (output->type == kTfLiteUInt8) {
+            for (int i = 0; i < 5 && i < output_size_; i++) {
+                ESP_LOGD(TAG, "  [%d]: %u -> %.6f", i, output->data.uint8[i], dequantized_output_[i]);
+            }
+        } else {
+            for (int i = 0; i < 5 && i < output_size_; i++) {
+                ESP_LOGD(TAG, "  [%d]: %d -> %.6f", i, output->data.int8[i], dequantized_output_[i]);
+            }
+        }
 #endif
     } 
     else {
@@ -1140,12 +1140,12 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
     debug_raw_outputs(output); // Debug raw outputs before processing
     debug_qat_model_output(); // QAT-specific debug output
 #endif
-      
+
     // Process the output to get both value and confidence
     processed_output_ = process_output(model_output_);
     ESP_LOGD(TAG, "Processed output - Value: %.1f, Confidence: %.6f", 
-            processed_output_.value, processed_output_.confidence);
-
+             processed_output_.value, processed_output_.confidence);
+    
     DURATION_END("ModelHandler::invoke_model");
     return true;
 }
