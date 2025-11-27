@@ -393,7 +393,12 @@ ProcessedOutput ModelHandler::process_output(const float *output_data) const {
     ESP_LOGD(TAG, "Raw model outputs before any processing:");
     for (int i = 0; i < output_size_; i+=num_params) {
       if (output_data[i+4] > 0) {
-        ESP_LOGD(TAG, "  Class %d: [x: %.6f, y: %.6f, w: %.6f, h: %.6f, score: %.6f, class: %.6f]", i, output_data[i], output_data[i+1], output_data[i+2], output_data[i+3], output_data[i+4], output_data[i+5]);
+        ESP_LOGD(TAG, "  Found [x: %.6f, y: %.6f, w: %.6f, h: %.6f, score: %.6f]", output_data[i], output_data[i+1], output_data[i+2], output_data[i+3], output_data[i+4]);
+        for (int j = i+5; j < i+num_params; j++) {
+          if (output_data[j] > 0) {
+            ESP_LOGD(TAG, "    Class %d: %.6f", j, output_data[j]);
+          }
+        }
       }
     }
     
@@ -1140,7 +1145,7 @@ bool ModelHandler::invoke_model(const uint8_t* input_data, size_t input_size) {
     debug_raw_outputs(output); // Debug raw outputs before processing
     debug_qat_model_output(); // QAT-specific debug output
 #endif
-
+    
     // Process the output to get both value and confidence
     processed_output_ = process_output(model_output_);
     ESP_LOGD(TAG, "Processed output - Value: %.1f, Confidence: %.6f", 
